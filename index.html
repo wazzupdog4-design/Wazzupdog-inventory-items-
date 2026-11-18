@@ -41,15 +41,16 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 #dlg{position:fixed;inset:0;background:#0008;display:grid;place-items:center;z-index:20}#dlg[hidden]{display:none}.dbox{background:var(--card);padding:22px;border-radius:14px;min-width:270px;text-align:center}
 #login{max-width:none;margin:0;min-height:calc(100vh - 72px);display:grid;place-items:center;background:linear-gradient(135deg,var(--pr),var(--hd));padding:20px}#login[hidden]{display:none}
 .lc{background:var(--card);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 10px 40px #0004}.lg{font-size:46px}.lc h1{margin:6px 0 0}.lc p{color:var(--mu);margin:2px 0 14px}
+td.n,th:first-child{position:sticky;inset-inline-start:0;z-index:1}td.n{background:var(--card)}th:first-child{background:var(--hd)}#rep td.n,#rep th:first-child{position:static}
 </style>
 </head>
 <body>
 <header>
- <div id="logo">🌭</div><div><h1>Wazzup Dog</h1><small id="who"></small></div><span style="flex:1"></span>
- <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v4</span><button class="s" id="bOut" onclick="logout()" hidden></button>
+ <div id="logo">🌭</div><div><h1 id="siteH">Wazzup Dog</h1><small id="who"></small></div><span style="flex:1"></span>
+ <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v5</span><button class="s" id="bOut" onclick="logout()" hidden></button>
 </header>
 
-<div id="login"><div class="lc"><div class="lg">🌭</div><h1>Wazzup Dog</h1><p data-i="sub"></p><h2 data-i="login"></h2><select id="lr" style="width:100%;margin:8px 0"></select><input id="pw" type="password" autocomplete="off" data-p="pass" onkeydown="if(event.key==='Enter')doLogin()"><button onclick="doLogin()" data-i="enter" style="width:100%"></button></div></div>
+<div id="login"><div class="lc"><div class="lg">🌭</div><h1>Wazzup Dog</h1><p data-i="sub"></p><h2 data-i="login"></h2><input id="pw" type="password" autocomplete="off" data-p="pass" onkeydown="if(event.key==='Enter')doLogin()"><button onclick="doLogin()" data-i="enter" style="width:100%"></button></div></div>
 <div id="dlg" hidden><div class="dbox"><p id="dm"></p><div class="bar" style="justify-content:center"><button id="dy" data-i="yes"></button><button id="dn" class="g" data-i="no"></button></div></div></div>
 
 <main id="app" hidden>
@@ -61,7 +62,7 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 
 <section id="t-inv" class="card">
  <h2 id="ttl"></h2><p class="rng" id="rng"></p><div class="kpis" id="kpis"></div>
- <div class="sc"><table id="tbl"></table></div>
+ <input id="q" data-p="search" oninput="render()" style="width:100%;margin-bottom:8px"><div class="sc"><table id="tbl"></table></div>
  <div class="bar" style="margin-top:10px"><button id="bRoll" onclick="rollover()" data-i="roll" hidden></button></div>
  <p class="note" data-i="note"></p>
 </section>
@@ -83,7 +84,8 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 <section id="t-set" class="card" hidden>
  <h2 data-i="settings"></h2>
  <h3 data-i="color"></h3><div class="bar"><input type="color" id="clr" oninput="setColor(this.value)" style="width:48px;height:38px;padding:2px"><span id="presets" class="bar"></span></div>
- <h3 data-i="pwTitle"></h3><div class="bar"><input id="pw-c" type="password" data-p="pwJ"><input id="pw-n" type="password" data-p="pwH"><input id="pw-n2" type="password" data-p="pwA"><button onclick="savePw()" data-i="pwSave"></button></div>
+ <h3 data-i="pwTitle"></h3><div id="pwBox"></div>
+ <h3 data-i="siteSet"></h3><div class="bar"><input id="s-name" data-p="siteNameP"><input id="s-j" data-p="staffJ"><input id="s-h" data-p="staffH"><button onclick="saveNames()" data-i="save"></button></div>
  <h3 data-i="data"></h3><div class="bar"><span data-i="logoUp"></span><input type="file" accept="image/*" onchange="upLogo(this)"><button onclick="expJson()" data-i="backup"></button><span data-i="restore"></span><input type="file" accept=".json" onchange="impJson(this)"></div>
  <p class="note" data-i="autosave"></p>
  <h3 data-i="trash"></h3><div class="sc"><table id="trash" style="min-width:0"></table></div>
@@ -93,7 +95,7 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 <div id="toast"></div><div id="rep"></div>
 
 <script>
-var LAST={},unsubs=[];
+var LAST={},unsubs=[],ACC={},selfChg=false,CE=false;
 var MO=[["يناير","Jan"],["فبراير","Feb"],["مارس","Mar"],["أبريل","Apr"],["مايو","May"],["يونيو","Jun"],["يوليو","Jul"],["أغسطس","Aug"],["سبتمبر","Sep"],["أكتوبر","Oct"],["نوفمبر","Nov"],["ديسمبر","Dec"]];
 var T={ar:{login:"تسجيل الدخول",pass:"كلمة المرور",enter:"دخول",wrong:"كلمة المرور غير صحيحة",out:"خروج",inv:"الجرد",pur:"المشتريات",trf:"التحويلات",items:"الأصناف",settings:"الإعدادات",
  juffair:"الجفير",hamala:"الهملة",total:"الإجمالي (الفرعين)",h1:"1 – 15",h2:"16 – نهاية الشهر",roll:"ترحيل المتبقي الفعلي للفترة التالية",
@@ -103,7 +105,7 @@ var T={ar:{login:"تسجيل الدخول",pass:"كلمة المرور",enter:"�
  pcols:["الصنف","التاريخ","رقم الفاتورة","المورد","الكمية","سعر الوحدة","الإجمالي BHD","ملاحظات","تاريخ ووقت التسجيل","المسجِّل"],tcols:["الصنف","التاريخ","الرقم","النوع","الكمية","ملاحظات"],
  inn:"وارد (استلمنا)",out2:"صادر (بعنا)",nameAr:"الاسم بالعربي",nameEn:"English name",unit:"الوحدة",price:"السعر BHD",del:"حذف",sure:"متأكد؟",added:"تمت الإضافة ✓",needQty:"اكتب الكمية",
  logoUp:"رفع اللوجو:",backup:"⬇ نسخة احتياطية",restore:"استرجاع:",wipe:"مسح كل البيانات",autosave:"الحفظ تلقائي بعد كل تعديل.",totPur:"إجمالي المشتريات",
- rolled:"تم الترحيل ✓",rollQ:"ترحيل المتبقي الفعلي إلى الفترة التالية؟",locked:"مقفل",color:"لون التطبيق",pwTitle:"تغيير كلمة المرور (حسابك)",pwSave:"حفظ كلمات المرور",pwDone:"تم تغيير كلمات المرور ✓",pwShort:"كلمة المرور الجديدة 6 حروف على الأقل ومتطابقة",pwJ:"كلمة المرور الحالية",pwH:"كلمة المرور الجديدة",pwA:"تأكيد كلمة المرور الجديدة",data:"البيانات",trash:"المحذوفات (قابلة للاسترجاع)",log:"سجل النشاط",restoreBtn:"استرجاع",minQ:"الحد الأدنى (تنبيه ⚠)",yes:"نعم",no:"لا",byName:"اسم المسجِّل (إجباري)",needBy:"اكتب اسم الشخص اللي سجّل المشتريات",newItem:"أو اكتب صنف جديد",kStock:"قيمة المخزون",kItems:"عدد الأصناف",kLow:"تحت الحد الأدنى",kPur:"مشتريات الفترة",sub:"نظام الجرد",role_admin:"مدير",role_staff:"موظف",stockVal:"قيمة المخزون",unlock:"فتح"},
+ rolled:"تم الترحيل ✓",rollQ:"ترحيل المتبقي الفعلي إلى الفترة التالية؟",locked:"مقفل",color:"لون التطبيق",pwTitle:"تغيير كلمات المرور (للجميع)",pwSave:"تغيير",pwDone:"تم تغيير كلمات المرور ✓",pwShort:"كلمة المرور 6 حروف على الأقل",pwJ:"كلمة المرور الحالية",pwH:"كلمة المرور الجديدة",pwA:"تأكيد كلمة المرور الجديدة",data:"البيانات",trash:"المحذوفات (قابلة للاسترجاع)",log:"سجل النشاط",restoreBtn:"استرجاع",minQ:"الحد الأدنى (تنبيه ⚠)",yes:"نعم",no:"لا",byName:"اسم المسجِّل (إجباري)",needBy:"اكتب اسم الشخص اللي سجّل المشتريات",newItem:"أو اكتب صنف جديد",kStock:"قيمة المخزون",siteSet:"اسم الموقع وأسماء الموظفين",siteNameP:"اسم الموقع",staffJ:"موظف الجفير",staffH:"موظف الهملة",save:"حفظ",pwSame:"كلمة المرور دي مستخدمة بالفعل، اختار غيرها",pwChanged:"تم تغيير كلمة المرور، سجّل الدخول من جديد",search:"🔍 ابحث عن صنف...",kItems:"عدد الأصناف",kLow:"تحت الحد الأدنى",kPur:"مشتريات الفترة",sub:"نظام الجرد",role_admin:"مدير",role_staff:"موظف",stockVal:"قيمة المخزون",unlock:"فتح"},
 en:{login:"Sign in",pass:"Password",enter:"Enter",wrong:"Wrong password",out:"Logout",inv:"Inventory",pur:"Purchases",trf:"Transfers",items:"Items",settings:"Settings",
  juffair:"Juffair",hamala:"Hamala",total:"Total (both branches)",h1:"1 – 15",h2:"16 – End of month",roll:"Roll actual count to next period",
  note:"Type only in yellow cells. Expected = Total − Sales − Waste − Other. Diff = Actual − Expected (negative = shortage). Staff enter the actual count once, then it locks; only the manager can edit.",
@@ -112,7 +114,7 @@ en:{login:"Sign in",pass:"Password",enter:"Enter",wrong:"Wrong password",out:"Lo
  pcols:["Item","Date","Invoice No.","Supplier","Qty","Unit Price","Total BHD","Notes","Recorded at","By"],tcols:["Item","Date","No.","Type","Qty","Notes"],
  inn:"In (received)",out2:"Out (sent)",nameAr:"Arabic name",nameEn:"English name",unit:"Unit",price:"Price BHD",del:"Delete",sure:"Are you sure?",added:"Added ✓",needQty:"Enter quantity",
  logoUp:"Upload logo:",backup:"⬇ Backup",restore:"Restore:",wipe:"Erase all data",autosave:"Auto-saved after every change.",totPur:"Total Purchases",
- rolled:"Rolled over ✓",rollQ:"Roll the actual count to the next period?",locked:"Locked",color:"App color",pwTitle:"Change password (your account)",pwSave:"Save passwords",pwDone:"Passwords updated ✓",pwShort:"New password needs 6+ characters and must match",pwJ:"Current password",pwH:"New password",pwA:"Confirm new password",data:"Data",trash:"Deleted items (restorable)",log:"Activity log",restoreBtn:"Restore",minQ:"Min qty (⚠ alert)",yes:"Yes",no:"No",byName:"Recorded by (required)",needBy:"Enter the name of the person recording the purchase",newItem:"or type a new item",kStock:"Stock value",kItems:"Items",kLow:"Below minimum",kPur:"Period purchases",sub:"Inventory System",role_admin:"Manager",role_staff:"Staff",stockVal:"Stock value",unlock:"Unlock"}};
+ rolled:"Rolled over ✓",rollQ:"Roll the actual count to the next period?",locked:"Locked",color:"App color",pwTitle:"Change passwords (everyone)",pwSave:"Change",pwDone:"Passwords updated ✓",pwShort:"Password needs 6+ characters",pwJ:"Current password",pwH:"New password",pwA:"Confirm new password",data:"Data",trash:"Deleted items (restorable)",log:"Activity log",restoreBtn:"Restore",minQ:"Min qty (⚠ alert)",yes:"Yes",no:"No",byName:"Recorded by (required)",needBy:"Enter the name of the person recording the purchase",newItem:"or type a new item",kStock:"Stock value",siteSet:"Site name & staff names",siteNameP:"Site name",staffJ:"Juffair staff",staffH:"Hamala staff",save:"Save",pwSame:"That password is already used, pick another",pwChanged:"Password was changed, please sign in again",search:"🔍 Search item...",kItems:"Items",kLow:"Below minimum",kPur:"Period purchases",sub:"Inventory System",role_admin:"Manager",role_staff:"Staff",stockVal:"Stock value",unlock:"Unlock"}};
 function seed(){
  var n=[["هوت دوج","Hot Dog"],["برجر","Burger"],["دجاج","Chicken"],["بطاطس","Fries"],["خبز","Bread"],["خبز بطاطس","Potato Buns"],["مشروبات غازية","Soft Drinks"],["مياه","Water"],["عصير","Juice"]];
  var it=n.map(function(x,i){return{id:"i"+(i+1),ar:x[0],en:x[1],u:"",pr:0}});
@@ -121,17 +123,19 @@ function seed(){
   trf:[{i:"i2",d:"",n:"",r:"in",q:20,t:""}]}};
  return{items:it,br:{j:j,h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl"}};
 }
-var S={items:[],br:{j:{},h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl",theme:"",color:"#d62828"},log:[]},me=null,cur={b:"j",y:2026,m:10,h:1},tab="inv",ready=false,metaOK=false;
-try{var u0=JSON.parse(localStorage.getItem("wd-ui"));if(u0){S.ui.lang=u0.lang||"ar";S.ui.dir=u0.dir||"rtl";S.ui.theme=u0.theme||""}}catch(e){}
+var S={items:[],br:{j:{},h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl",theme:"",color:"#d62828"},log:[],siteName:"Wazzup Dog",staff:{j:"",h:""}},me=null,cur={b:"j",y:2026,m:10,h:1},tab="inv",ready=false,metaOK=false;
+try{var u0=JSON.parse(localStorage.getItem("wd-ui"));if(u0){S.ui.lang=u0.lang||"ar";S.ui.dir=u0.dir||"rtl";S.ui.theme=u0.theme||"";S.siteName=u0.siteName||"Wazzup Dog"}}catch(e){}
 function canB(b){return me&&(me.role==="admin"||me.br===b)}
-function metaObj(){return{items:S.items,seq:S.seq,logo:S.logo,color:S.ui.color,lastBy:S.lastBy||"",log:S.log.slice(0,100)}}
+function metaObj(){return{items:S.items,seq:S.seq,logo:S.logo,color:S.ui.color,lastBy:S.lastBy||"",log:S.log.slice(0,100),siteName:S.siteName,staff:S.staff}}
 function setSvd(t){var e=document.getElementById("svd");if(e)e.textContent=t}
 function cw(c,id,o,lk){FB.set(c,id,o).then(function(){var d=new Date();setSvd("✓ "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"))}).catch(function(){delete LAST[lk];setSvd("⚠ !");toast("⚠ Save failed")})}
-function save(){try{localStorage.setItem("wd-ui",JSON.stringify({lang:S.ui.lang,dir:S.ui.dir,theme:S.ui.theme}))}catch(e){}
+function save(){try{localStorage.setItem("wd-ui",JSON.stringify({lang:S.ui.lang,dir:S.ui.dir,theme:S.ui.theme,siteName:S.siteName}))}catch(e){}
  if(!window.FB||!me||!ready||!metaOK)return;
  var m=JSON.stringify(metaObj());if(LAST.meta!==m){LAST.meta=m;cw("meta","main",JSON.parse(m),"meta")}
  ["j","h"].forEach(function(b){if(!canB(b))return;Object.keys(S.br[b]).forEach(function(k){var d=S.br[b][k],j=JSON.stringify(d),id=b+"_"+k;if(LAST[id]!==j){LAST[id]=j;cw("periods",id,JSON.parse(j),id)}})})}
-function fdt(s){if(!s)return"";var d=new Date(s);if(isNaN(d))return"";var p=function(n){return String(n).padStart(2,"0")};return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+p(d.getHours())+":"+p(d.getMinutes())}
+function fdt(s){if(!s)return"";var d=new Date(s);if(isNaN(d))return"";return d.toLocaleString("en-GB",{timeZone:"Asia/Bahrain",day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","")}
+function FQ(it){var q=(($("q")||{}).value||"").trim().toLowerCase();return!q||(it.ar+" "+it.en).toLowerCase().indexOf(q)>-1}
+function canE(x){return isAdmin()||(me&&me.role==="staff"&&x.ts&&Date.now()-new Date(x.ts).getTime()<864e5)}
 function IT(){return S.items.filter(function(i){return!i.del})}
 function logA(m){S.log.unshift({t:new Date().toISOString(),u:me?(me.role==="admin"?"admin":"staff-"+me.br):"",m:m});S.log=S.log.slice(0,300)}
 function $(i){return document.getElementById(i)}
@@ -168,7 +172,7 @@ function init(){try{navigator.storage&&navigator.storage.persist&&navigator.stor
  applyUI();
 }
 function applyUI(){
- var l=S.ui.lang,d=document.documentElement;d.lang=l;d.dir=S.ui.dir;$("bLang").textContent=l==="ar"?"EN":"عربي";$("bOut").textContent=L("out");var lv=$("lr").value;$("lr").innerHTML='<option value="juffair">'+L("juffair")+'</option><option value="hamala">'+L("hamala")+'</option><option value="admin">'+L("role_admin")+'</option>';if(lv)$("lr").value=lv;$("bSet").hidden=!isAdmin();d.style.setProperty("--pr",S.ui.color||"#d62828");if(S.ui.theme)d.dataset.theme=S.ui.theme;
+ var l=S.ui.lang,d=document.documentElement;d.lang=l;d.dir=S.ui.dir;$("bLang").textContent=l==="ar"?"EN":"عربي";$("bOut").textContent=L("out");$("siteH").textContent=S.siteName;document.title=S.siteName+" – "+L("sub");var lh=document.querySelector(".lc h1");if(lh)lh.textContent=S.siteName;$("bSet").hidden=!isAdmin();d.style.setProperty("--pr",S.ui.color||"#d62828");if(S.ui.theme)d.dataset.theme=S.ui.theme;
  document.querySelectorAll("[data-i]").forEach(function(e){e.textContent=L(e.dataset.i)});
  document.querySelectorAll("[data-p]").forEach(function(e){e.placeholder=L(e.dataset.p)});
  var m=$("mo");m.innerHTML="";MO.forEach(function(n,i){m.innerHTML+='<option value="'+i+'">'+(l==="ar"?n[0]:n[1])+'</option>'});
@@ -179,35 +183,45 @@ function applyUI(){
  var tb=[["inv","inv"],["pur","pur"],["trf","trf"],["itm","items"]];if(isAdmin())tb.push(["set","settings"]);
  $("tabs").innerHTML=tb.map(function(x){return'<button data-t="'+x[0]+'" class="'+(tab===x[0]?"on":"")+'" onclick="setTab(\''+x[0]+'\')">'+L(x[1])+'</button>'}).join("");
  if(S.logo){$("logo").innerHTML='<img src="'+S.logo+'" alt="">';document.querySelector(".lg").innerHTML='<img src="'+S.logo+'" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover">'}
- if(me)$("who").textContent=L("role_"+me.role)+(me.role==="staff"?" – "+L(me.br==="j"?"juffair":"hamala"):"");
+ if(me)$("who").textContent=L("role_"+me.role)+(me.role==="staff"?" – "+L(me.br==="j"?"juffair":"hamala")+((S.staff&&S.staff[me.br])?" · "+S.staff[me.br]:""):"");
  if(me)render();
 }
 function setTab(t){tab=t;["inv","pur","trf","itm","set"].forEach(function(x){$("t-"+x).hidden=(x!==t)});applyUI()}
 function togLang(){S.ui.lang=S.ui.lang==="ar"?"en":"ar";S.ui.dir=S.ui.lang==="ar"?"rtl":"ltr";save();applyUI()}
 function togDir(){S.ui.dir=S.ui.dir==="rtl"?"ltr":"rtl";save();applyUI()}
+function dEmail(pw){return crypto.subtle.digest("SHA-256",new TextEncoder().encode("wd1|"+pw)).then(function(h){return"u"+Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,"0")}).join("").slice(0,24)+"@wazzup.app"})}
 function doLogin(){if(!window.FB){toast("...");return}var p=$("pw").value;if(!p)return;
- FB.login($("lr").value+"@wazzup.app",p).then(function(){$("pw").value=""}).catch(function(){toast(L("wrong"))})}
+ dEmail(p).then(function(de){var list=[de,"admin@wazzup.app","juffair@wazzup.app","hamala@wazzup.app"],i=0;
+  function next(){if(i>=list.length){toast(L("wrong"));return}FB.login(list[i++],p).then(function(){$("pw").value=""}).catch(next)}next()})}
+function roleOf(em){var d={a:"admin@wazzup.app",j:"juffair@wazzup.app",h:"hamala@wazzup.app"},r=null;["a","j","h"].forEach(function(k){if(em===(ACC[k]||d[k]))r=k});return r}
+function chRole(r){var p=$("np-"+r).value;if(p.length<6){toast(L("pwShort"));return}
+ dEmail(p).then(function(ne){var c0={a:ACC.a||"admin@wazzup.app",j:ACC.j||"juffair@wazzup.app",h:ACC.h||"hamala@wazzup.app"};
+  if(ne===c0.a||ne===c0.j||ne===c0.h){toast(L("pwSame"));return}
+  var nw=Object.assign({},c0);nw[r]=ne;if(r==="a")selfChg=true;
+  FB.newUser(ne,p).then(function(){return FB.setAcc(nw)}).then(function(){logA("password change "+r);$("np-"+r).value="";toast(L("pwDone"));if(r==="a")return FB.login(ne,p).then(function(){selfChg=false})}).catch(function(e){selfChg=false;window.onFBErr(e)})})}
 function logout(){if(window.FB)FB.logout()}
 window.onFBErr=function(e){var m="⚠ "+((e&&e.code)||e);setSvd(m);toast(m);var r=document.getElementById("rng");if(r&&me)r.textContent=m}
-window.onAuth=function(u){
+window.onAuth=function(u){if(!u){start(null);return}FB.getAcc().then(function(a){ACC=a;var r=roleOf(u.email);if(!r){FB.logout();toast(L("wrong"));return}start(u,r)}).catch(function(e){window.onFBErr(e)})};
+function start(u,r){
  unsubs.forEach(function(f){f()});unsubs=[];ready=false;metaOK=false;LAST={};
  if(!u){me=null;$("login").hidden=false;$("app").hidden=true;$("bOut").hidden=true;$("who").textContent="";$("bSet").hidden=true;return}
- var n=(u.email||"").split("@")[0];me={role:n==="admin"?"admin":"staff",br:n==="hamala"?"h":"j"};cur.b=me.br;
+ me={role:r==="a"?"admin":"staff",br:r==="h"?"h":"j"};cur.b=me.br;
  $("login").hidden=true;$("app").hidden=false;$("bOut").hidden=false;S.br={j:{},h:{}};
  unsubs.push(FB.subMeta(function(d,fc){
-  if(d&&d.items&&d.items.length){metaOK=true;S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];LAST.meta=JSON.stringify(metaObj())}
+  if(d&&d.items&&d.items.length){metaOK=true;S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];S.siteName=d.siteName||"Wazzup Dog";S.staff=d.staff||{j:"",h:""};LAST.meta=JSON.stringify(metaObj())}
   else if(fc){return}
   else if(isAdmin()){metaOK=true;var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
   else toast("Setup not finished yet – sign in as manager first");
   var first=!ready;ready=true;if(first)setTab("inv");else render();if(metaOK&&!LAST.meta)save()}));
  setTimeout(function(){if(!ready&&me){setSvd("⚠ timeout");toast("⚠ No connection to database")}},8000);
- unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(ready)render()}))}
+ unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(ready)render()}));
+ unsubs.push(FB.subAcc(function(a){ACC=a;if(!roleOf(u.email)&&!selfChg){FB.logout();toast(L("pwChanged"))}}))}
 
 function render(){
  save();var ro=cur.b==="t",ad=isAdmin(),nmB=L(cur.b==="j"?"juffair":(cur.b==="h"?"hamala":"total"));
  $("ttl").textContent=iso(L("inventory"))+" – "+iso(nmB)+" – "+iso(MO[cur.m][S.ui.lang==="ar"?0:1]+" "+cur.y);$("rng").textContent=rangeTxt(cur);
  var c=L("cols"),h='<tr>'+c.map(function(x){return'<th>'+x+'</th>'}).join("")+'</tr>',tv=0;
- IT().forEach(function(it){var r=calc(it.id),cl=r.df===""?"":(r.df===0?"ok":"bad"),dis=ro?" disabled":"",lkA=(ro||(!ad&&r.lk))?" disabled":"";tv+=r.val;
+ IT().filter(FQ).forEach(function(it){var r=calc(it.id),cl=r.df===""?"":(r.df===0?"ok":"bad"),dis=ro?" disabled":"",lkA=(ro||(!ad&&r.lk))?" disabled":"";tv+=r.val;
   h+='<tr><td class="n">'+esc(nm(it))+(it.mn&&(r.ac!==""?r.ac:r.ex)<it.mn?' <span class="bad">⚠</span>':'')+(it.u?' <small>('+esc(it.u)+')</small>':'')+'</td>'
   +'<td>'+(ro||!ad?r3(r.op):inp("open",it.id,r.op))+'</td><td>'+r3(r.pu)+'</td><td>'+r3(r.ti)+'</td><td>'+r3(r.to)+'</td><td>'+r3(r.tot)+'</td>'
   +'<td>'+(ro?r3(r.sa):inp("sales",it.id,r.sa||"",dis))+'</td><td>'+(ro?r3(r.wa):inp("waste",it.id,r.wa||"",dis))+'</td><td>'+(ro?r3(r.ot):inp("other",it.id,r.ot||"",dis))+'</td>'
@@ -221,19 +235,19 @@ function render(){
  var bb=ro?"j":cur.b,p=P(bb,key(cur))||{pur:[],trf:[]},tt=0;
  $("pForm").hidden=$("rForm").hidden=ro;
  var pc=L("pcols"),ph='<tr>'+pc.map(function(x){return'<th>'+x+'</th>'}).join("")+'<th></th></tr>';
- (p.pur||[]).forEach(function(x,i){if(x.del)return;var t=num(x.q)*num(x.p);tt+=t;ph+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("pur",i,"d",x.d,"date",130)+'</td><td>'+ec("pur",i,"n",x.n)+'</td><td>'+ec("pur",i,"s",x.s)+'</td><td>'+ec("pur",i,"q",x.q,"number",70)+'</td><td>'+ec("pur",i,"p",x.p,"number",80)+'</td><td>'+t.toFixed(3)+'</td><td>'+ec("pur",i,"t",x.t)+'</td><td>'+fdt(x.ts)+'</td><td>'+esc(x.by)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'pur\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
+ (p.pur||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);var t=num(x.q)*num(x.p);tt+=t;ph+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("pur",i,"d",x.d,"date",130)+'</td><td>'+ec("pur",i,"n",x.n)+'</td><td>'+ec("pur",i,"s",x.s)+'</td><td>'+ec("pur",i,"q",x.q,"number",70)+'</td><td>'+ec("pur",i,"p",x.p,"number",80)+'</td><td>'+t.toFixed(3)+'</td><td>'+ec("pur",i,"t",x.t)+'</td><td>'+fdt(x.ts)+'</td><td>'+esc(x.by)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'pur\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
  $("p-tbl").innerHTML=ph;$("p-tot").textContent=L("totPur")+": "+tt.toFixed(3)+" BHD  ("+rangeTxt(cur)+")";
  var tc=L("tcols"),rh='<tr>'+tc.map(function(x){return'<th>'+x+'</th>'}).join("")+'<th></th></tr>';
- (p.trf||[]).forEach(function(x,i){if(x.del)return;rh+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("trf",i,"d",x.d,"date",130)+'</td><td>'+ec("trf",i,"n",x.n)+'</td><td>'+(x.r==="in"?L("inn"):L("out2"))+'</td><td>'+ec("trf",i,"q",x.q,"number",70)+'</td><td>'+ec("trf",i,"t",x.t)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'trf\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
+ (p.trf||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);rh+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("trf",i,"d",x.d,"date",130)+'</td><td>'+ec("trf",i,"n",x.n)+'</td><td>'+(x.r==="in"?L("inn"):L("out2"))+'</td><td>'+ec("trf",i,"q",x.q,"number",70)+'</td><td>'+ec("trf",i,"t",x.t)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'trf\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
  $("r-tbl").innerHTML=rh;
  var ih='<tr><th>'+L("nameAr")+'</th><th>'+L("nameEn")+'</th><th>'+L("unit")+'</th><th>'+L("price")+'</th><th>'+L("minQ")+'</th><th></th></tr>';
  S.items.forEach(function(it,i){if(it.del)return;ih+='<tr><td><input class="t" value="'+esc(it.ar)+'" onchange="editItem('+i+',\'ar\',this.value)"></td><td><input class="t" value="'+esc(it.en)+'" onchange="editItem('+i+',\'en\',this.value)"></td><td><input class="t" value="'+esc(it.u)+'" onchange="editItem('+i+',\'u\',this.value)"></td><td><input class="y" type="number" step="any" value="'+it.pr+'" '+(ad?"":"disabled")+' onchange="editItem('+i+',\'pr\',this.value)"></td><td><input class="y" type="number" step="any" value="'+(it.mn||"")+'" onchange="editItem('+i+',\'mn\',this.value)"></td><td>'+(ad?'<button class="g" onclick="delItem('+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
  $("i-tbl").innerHTML=ih;if(ad)renderSet();
- var low=0;IT().forEach(function(it){var r=calc(it.id);if(it.mn&&(r.ac!==""?r.ac:r.ex)<it.mn)low++});
+ var low=0,tva=0;IT().forEach(function(it){var r=calc(it.id);tva+=r.val;if(it.mn&&(r.ac!==""?r.ac:r.ex)<it.mn)low++});
  var pt=0;(ro?["j","h"]:[cur.b]).forEach(function(b){var q=P(b,key(cur));q&&(q.pur||[]).forEach(function(x){if(!x.del)pt+=num(x.q)*num(x.p)})});
- $("kpis").innerHTML=kp(L("kStock"),r3(tv).toFixed(3)+" BHD")+kp(L("kItems"),IT().length)+kp(L("kLow"),low)+kp(L("kPur"),pt.toFixed(3)+" BHD");
+ $("kpis").innerHTML=kp(L("kStock"),r3(tva).toFixed(3)+" BHD")+kp(L("kItems"),IT().length)+kp(L("kLow"),low)+kp(L("kPur"),pt.toFixed(3)+" BHD");
  var sp={};["j","h"].forEach(function(b){Object.keys(S.br[b]).forEach(function(k){(S.br[b][k].pur||[]).forEach(function(x){if(x.s)sp[x.s]=1})})});$("sups").innerHTML=Object.keys(sp).map(function(s){return'<option value="'+esc(s)+'">'}).join("");
- if(!$("p-by").value)$("p-by").value=S.lastBy||"";if(!$("p-d").value)$("p-d").value=new Date().toISOString().slice(0,10);
+ if(!$("p-by").value)$("p-by").value=(me.role==="staff"&&S.staff&&S.staff[me.br])||S.lastBy||"";if(!$("p-d").value)$("p-d").value=new Date().toISOString().slice(0,10);
 }
 function inp(k,id,v,dis){return'<input class="y" type="number" step="any" value="'+(v===undefined?"":v)+'"'+(dis||"")+' onchange="setF(\''+k+'\',\''+id+'\',this.value)">'}
 function setF(k,id,v,txt){if(cur.b==="t")return;var p=P(cur.b,key(cur),1);p[k][id]=txt?v:(v===""?"":num(v));if(k==="actual"&&v!==""&&!isAdmin())p.lock[id]=true;logA(k+": "+itName(id)+" = "+v+" ("+key(cur)+")");render()}
@@ -241,8 +255,8 @@ function unlock(id){P(cur.b,key(cur),1).lock[id]=false;render()}
 function rollover(){ask(L("rollQ"),doRoll)}
 function ask(m,cb){$("dm").textContent=m;$("dlg").hidden=false;$("dy").onclick=function(){$("dlg").hidden=true;cb()};$("dn").onclick=function(){$("dlg").hidden=true}}
 function kp(a,b){return'<div class="kp"><small>'+a+'</small><b>'+b+'</b></div>'}
-function ec(l,i,k,v,ty,w){if(!(isAdmin()&&cur.b!=="t"))return ty==="date"?fd(v):esc(v);return'<input class="y" style="width:'+(w||90)+'px" type="'+(ty||"text")+'" value="'+esc(v)+'" onchange="editRow(\''+l+'\','+i+',\''+k+'\',this.value)">'}
-function editRow(l,i,k,v){if(!isAdmin()||cur.b==="t")return;var x=P(cur.b,key(cur),1)[l][i];x[k]=(k==="q"||k==="p")?num(v):v;logA("edit "+l+" "+k);render()}
+function ec(l,i,k,v,ty,w){if(!(CE&&cur.b!=="t"))return ty==="date"?fd(v):esc(v);return'<input class="y" style="width:'+(w||90)+'px" type="'+(ty||"text")+'" value="'+esc(v)+'" onchange="editRow(\''+l+'\','+i+',\''+k+'\',this.value)">'}
+function editRow(l,i,k,v){if(cur.b==="t")return;var x=P(cur.b,key(cur),1)[l][i];if(!canE(x))return;x[k]=(k==="q"||k==="p")?num(v):v;logA("edit "+l+" "+k);render()}
 function fillLast(){var id=$("p-i").value,best=null;["j","h"].forEach(function(b){Object.keys(S.br[b]).forEach(function(k){(S.br[b][k].pur||[]).forEach(function(x){if(x.i===id&&!x.del&&(!best||(x.ts||x.d||"")>(best.ts||best.d||"")))best=x})})});if(best){$("p-p").value=best.p;$("p-s").value=best.s||""}}
 function doRoll(){var n=nextOf(cur),d=P(cur.b,key(n),1);
  S.items.forEach(function(it){var r=calcB(cur.b,it.id);d.open[it.id]=r.ac!==""?r.ac:r3(r.ex)});logA("rollover "+key(cur));toast(L("rolled"));render()}
@@ -265,7 +279,10 @@ function togTheme(){var d=document.documentElement,c=d.dataset.theme||(matchMedi
 function setColor(v){S.ui.color=v;document.documentElement.style.setProperty("--pr",v);if($("clr"))$("clr").value=v;save()}
 function savePw(){var n=$("pw-n").value;if(n.length<6||n!==$("pw-n2").value){toast(L("pwShort"));return}
  if(!window.FB)return;FB.chpw($("pw-c").value,n).then(function(){toast(L("pwDone"));["pw-c","pw-n","pw-n2"].forEach(function(i){$(i).value=""})}).catch(function(){toast(L("wrong"))})}
+function saveNames(){S.siteName=$("s-name").value.trim()||"Wazzup Dog";S.staff={j:$("s-j").value.trim(),h:$("s-h").value.trim()};logA("names");applyUI();toast(L("added"))}
 function renderSet(){
+ if(!$("pwBox").innerHTML){$("pwBox").innerHTML=["j","h","a"].map(function(r){var k=r==="j"?"juffair":r==="h"?"hamala":"role_admin";return'<div class="bar" style="margin-bottom:6px"><b data-i="'+k+'" style="min-width:90px"></b><input id="np-'+r+'" type="text" data-p="pwH"><button onclick="chRole(\''+r+'\')" data-i="pwSave"></button></div>'}).join("");document.querySelectorAll("#pwBox [data-i]").forEach(function(e){e.textContent=L(e.dataset.i)});document.querySelectorAll("#pwBox [data-p]").forEach(function(e){e.placeholder=L(e.dataset.p)})}
+ var fi=function(id,v){var e=$(id);if(e&&document.activeElement!==e)e.value=v||""};fi("s-name",S.siteName);fi("s-j",(S.staff||{}).j);fi("s-h",(S.staff||{}).h);
  $("clr").value=S.ui.color;
  $("presets").innerHTML=["#d62828","#e85d04","#2a9d8f","#1d4ed8","#7b2cbf","#2b2d42"].map(function(c){return'<button style="background:'+c+';width:30px;height:30px;padding:0;border:2px solid #fff8" onclick="setColor(\''+c+'\')"></button>'}).join("");
  var h="";S.items.forEach(function(it,i){if(it.del)h+='<tr><td>'+esc(nm(it))+'</td><td>'+fdt(it.del)+'</td><td><button class="g" onclick="restoreItem('+i+')">'+L("restoreBtn")+'</button></td></tr>'});
@@ -284,7 +301,7 @@ function rowsAoa(){var a=[L("cols")],tv=0;
  IT().forEach(function(it){var r=calc(it.id);tv+=r.val;a.push([nm(it),r3(r.op),r3(r.pu),r3(r.ti),r3(r.to),r3(r.tot),r3(r.sa),r3(r.wa),r3(r.ot),r3(r.ex),r.ac,r.df,stat(r),r.pr,r.val,r.nt])});
  var f=new Array(16).fill("");f[0]=L("totRow");f[14]=r3(tv);a.push(f);return a}
 function iso(x){return"\u2068"+x+"\u2069"}
-function ttlTxt(){return iso("Wazzup Dog")+" – "+iso(L(cur.b==="j"?"juffair":cur.b==="h"?"hamala":"total"))+" | "+iso(MO[cur.m][S.ui.lang==="ar"?0:1]+" "+cur.y)+" | "+rangeTxt(cur)}
+function ttlTxt(){return iso(S.siteName)+" – "+iso(L(cur.b==="j"?"juffair":cur.b==="h"?"hamala":"total"))+" | "+iso(MO[cur.m][S.ui.lang==="ar"?0:1]+" "+cur.y)+" | "+rangeTxt(cur)}
 function pData(){var p=P(cur.b==="t"?"j":cur.b,key(cur))||{pur:[],trf:[]};return p}
 async function expXlsx(){
  if(typeof XLSX==="undefined"){toast("...");return}
@@ -317,9 +334,10 @@ init();
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,onSnapshot,collection,query,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-const app=initializeApp({apiKey:"AIzaSyA_TGEgHZcwZwCvioWapF7dZNtlUxTjh4c",authDomain:"wazzupdog-inventory-items.firebaseapp.com",projectId:"wazzupdog-inventory-items",storageBucket:"wazzupdog-inventory-items.firebasestorage.app",messagingSenderId:"613831855349",appId:"1:613831855349:web:625458043bc5ec8796c9bc"});
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,updatePassword,reauthenticateWithCredential,EmailAuthProvider,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,getDoc,onSnapshot,collection,query,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyA_TGEgHZcwZwCvioWapF7dZNtlUxTjh4c",authDomain:"wazzupdog-inventory-items.firebaseapp.com",projectId:"wazzupdog-inventory-items",storageBucket:"wazzupdog-inventory-items.firebasestorage.app",messagingSenderId:"613831855349",appId:"1:613831855349:web:625458043bc5ec8796c9bc"};
+const app=initializeApp(cfg);const secAuth=getAuth(initializeApp(cfg,"sec"));
 const auth=getAuth(app);
 const db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
 window.FB={
@@ -328,6 +346,10 @@ window.FB={
  set:(c,i,d)=>setDoc(doc(db,c,i),d),
  subMeta:cb=>onSnapshot(doc(db,"meta","main"),s=>cb(s.exists()?s.data():null,s.metadata.fromCache),e=>window.onFBErr&&window.onFBErr(e)),
  subPeriods:(b,cb)=>onSnapshot(b?query(collection(db,"periods"),where("br","==",b)):collection(db,"periods"),s=>cb(s.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>({id:d.id,data:d.data()}))),e=>window.onFBErr&&window.onFBErr(e)),
+ getAcc:()=>getDoc(doc(db,"meta","access")).then(s=>s.exists()?s.data():{}),
+ subAcc:cb=>onSnapshot(doc(db,"meta","access"),s=>cb(s.exists()?s.data():{})),
+ setAcc:o=>setDoc(doc(db,"meta","access"),o),
+ newUser:async(e,p)=>{try{await createUserWithEmailAndPassword(secAuth,e,p)}catch(x){if(x.code!=="auth/email-already-in-use")throw x}try{await signOut(secAuth)}catch(x){}},
  chpw:async(cur,nw)=>{const u=auth.currentUser;await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,cur));await updatePassword(u,nw)}
 };
 onAuthStateChanged(auth,u=>window.onAuth&&window.onAuth(u));
