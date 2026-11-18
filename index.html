@@ -188,13 +188,15 @@ function togDir(){S.ui.dir=S.ui.dir==="rtl"?"ltr":"rtl";save();applyUI()}
 function doLogin(){if(!window.FB){toast("...");return}var p=$("pw").value;if(!p)return;
  FB.login($("lr").value+"@wazzup.app",p).then(function(){$("pw").value=""}).catch(function(){toast(L("wrong"))})}
 function logout(){if(window.FB)FB.logout()}
+window.onFBErr=function(e){var m="⚠ "+((e&&e.code)||e);setSvd(m);toast(m);var r=document.getElementById("rng");if(r&&me)r.textContent=m}
 window.onAuth=function(u){
  unsubs.forEach(function(f){f()});unsubs=[];ready=false;LAST={};
  if(!u){me=null;$("login").hidden=false;$("app").hidden=true;$("bOut").hidden=true;$("who").textContent="";$("bSet").hidden=true;return}
  var n=(u.email||"").split("@")[0];me={role:n==="admin"?"admin":"staff",br:n==="hamala"?"h":"j"};cur.b=me.br;
  $("login").hidden=true;$("app").hidden=false;$("bOut").hidden=false;S.br={j:{},h:{}};
- unsubs.push(FB.subMeta(function(d){
+ unsubs.push(FB.subMeta(function(d,fc){
   if(d){S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];LAST.meta=JSON.stringify(metaObj())}
+  else if(fc){return}
   else if(isAdmin()){var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
   else toast("Setup not finished yet – sign in as manager first");
   var first=!ready;ready=true;if(first)setTab("inv");else render();if(!d&&isAdmin())save()}));
@@ -323,8 +325,8 @@ window.FB={
  login:(e,p)=>signInWithEmailAndPassword(auth,e,p),
  logout:()=>signOut(auth),
  set:(c,i,d)=>setDoc(doc(db,c,i),d),
- subMeta:cb=>onSnapshot(doc(db,"meta","main"),s=>cb(s.exists()?s.data():null)),
- subPeriods:(b,cb)=>onSnapshot(b?query(collection(db,"periods"),where("br","==",b)):collection(db,"periods"),s=>cb(s.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>({id:d.id,data:d.data()})))),
+ subMeta:cb=>onSnapshot(doc(db,"meta","main"),s=>cb(s.exists()?s.data():null,s.metadata.fromCache),e=>window.onFBErr&&window.onFBErr(e)),
+ subPeriods:(b,cb)=>onSnapshot(b?query(collection(db,"periods"),where("br","==",b)):collection(db,"periods"),s=>cb(s.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>({id:d.id,data:d.data()}))),e=>window.onFBErr&&window.onFBErr(e)),
  chpw:async(cur,nw)=>{const u=auth.currentUser;await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,cur));await updatePassword(u,nw)}
 };
 onAuthStateChanged(auth,u=>window.onAuth&&window.onAuth(u));
