@@ -46,7 +46,7 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 <body>
 <header>
  <div id="logo">🌭</div><div><h1>Wazzup Dog</h1><small id="who"></small></div><span style="flex:1"></span>
- <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v3</span><button class="s" id="bOut" onclick="logout()" hidden></button>
+ <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v4</span><button class="s" id="bOut" onclick="logout()" hidden></button>
 </header>
 
 <div id="login"><div class="lc"><div class="lg">🌭</div><h1>Wazzup Dog</h1><p data-i="sub"></p><h2 data-i="login"></h2><select id="lr" style="width:100%;margin:8px 0"></select><input id="pw" type="password" autocomplete="off" data-p="pass" onkeydown="if(event.key==='Enter')doLogin()"><button onclick="doLogin()" data-i="enter" style="width:100%"></button></div></div>
@@ -121,14 +121,14 @@ function seed(){
   trf:[{i:"i2",d:"",n:"",r:"in",q:20,t:""}]}};
  return{items:it,br:{j:j,h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl"}};
 }
-var S={items:[],br:{j:{},h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl",theme:"",color:"#d62828"},log:[]},me=null,cur={b:"j",y:2026,m:10,h:1},tab="inv",ready=false;
+var S={items:[],br:{j:{},h:{}},seq:20,logo:"",ui:{lang:"ar",dir:"rtl",theme:"",color:"#d62828"},log:[]},me=null,cur={b:"j",y:2026,m:10,h:1},tab="inv",ready=false,metaOK=false;
 try{var u0=JSON.parse(localStorage.getItem("wd-ui"));if(u0){S.ui.lang=u0.lang||"ar";S.ui.dir=u0.dir||"rtl";S.ui.theme=u0.theme||""}}catch(e){}
 function canB(b){return me&&(me.role==="admin"||me.br===b)}
 function metaObj(){return{items:S.items,seq:S.seq,logo:S.logo,color:S.ui.color,lastBy:S.lastBy||"",log:S.log.slice(0,100)}}
 function setSvd(t){var e=document.getElementById("svd");if(e)e.textContent=t}
 function cw(c,id,o,lk){FB.set(c,id,o).then(function(){var d=new Date();setSvd("✓ "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"))}).catch(function(){delete LAST[lk];setSvd("⚠ !");toast("⚠ Save failed")})}
 function save(){try{localStorage.setItem("wd-ui",JSON.stringify({lang:S.ui.lang,dir:S.ui.dir,theme:S.ui.theme}))}catch(e){}
- if(!window.FB||!me||!ready)return;
+ if(!window.FB||!me||!ready||!metaOK)return;
  var m=JSON.stringify(metaObj());if(LAST.meta!==m){LAST.meta=m;cw("meta","main",JSON.parse(m),"meta")}
  ["j","h"].forEach(function(b){if(!canB(b))return;Object.keys(S.br[b]).forEach(function(k){var d=S.br[b][k],j=JSON.stringify(d),id=b+"_"+k;if(LAST[id]!==j){LAST[id]=j;cw("periods",id,JSON.parse(j),id)}})})}
 function fdt(s){if(!s)return"";var d=new Date(s);if(isNaN(d))return"";var p=function(n){return String(n).padStart(2,"0")};return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+p(d.getHours())+":"+p(d.getMinutes())}
@@ -190,16 +190,16 @@ function doLogin(){if(!window.FB){toast("...");return}var p=$("pw").value;if(!p)
 function logout(){if(window.FB)FB.logout()}
 window.onFBErr=function(e){var m="⚠ "+((e&&e.code)||e);setSvd(m);toast(m);var r=document.getElementById("rng");if(r&&me)r.textContent=m}
 window.onAuth=function(u){
- unsubs.forEach(function(f){f()});unsubs=[];ready=false;LAST={};
+ unsubs.forEach(function(f){f()});unsubs=[];ready=false;metaOK=false;LAST={};
  if(!u){me=null;$("login").hidden=false;$("app").hidden=true;$("bOut").hidden=true;$("who").textContent="";$("bSet").hidden=true;return}
  var n=(u.email||"").split("@")[0];me={role:n==="admin"?"admin":"staff",br:n==="hamala"?"h":"j"};cur.b=me.br;
  $("login").hidden=true;$("app").hidden=false;$("bOut").hidden=false;S.br={j:{},h:{}};
  unsubs.push(FB.subMeta(function(d,fc){
-  if(d){S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];LAST.meta=JSON.stringify(metaObj())}
+  if(d&&d.items&&d.items.length){metaOK=true;S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];LAST.meta=JSON.stringify(metaObj())}
   else if(fc){return}
-  else if(isAdmin()){var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
+  else if(isAdmin()){metaOK=true;var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
   else toast("Setup not finished yet – sign in as manager first");
-  var first=!ready;ready=true;if(first)setTab("inv");else render();if(!d&&isAdmin())save()}));
+  var first=!ready;ready=true;if(first)setTab("inv");else render();if(metaOK&&!LAST.meta)save()}));
  setTimeout(function(){if(!ready&&me){setSvd("⚠ timeout");toast("⚠ No connection to database")}},8000);
  unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(ready)render()}))}
 
