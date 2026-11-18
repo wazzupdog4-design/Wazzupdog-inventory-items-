@@ -46,7 +46,7 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 <body>
 <header>
  <div id="logo">🌭</div><div><h1>Wazzup Dog</h1><small id="who"></small></div><span style="flex:1"></span>
- <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85"></span><button class="s" id="bOut" onclick="logout()" hidden></button>
+ <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v3</span><button class="s" id="bOut" onclick="logout()" hidden></button>
 </header>
 
 <div id="login"><div class="lc"><div class="lg">🌭</div><h1>Wazzup Dog</h1><p data-i="sub"></p><h2 data-i="login"></h2><select id="lr" style="width:100%;margin:8px 0"></select><input id="pw" type="password" autocomplete="off" data-p="pass" onkeydown="if(event.key==='Enter')doLogin()"><button onclick="doLogin()" data-i="enter" style="width:100%"></button></div></div>
@@ -200,6 +200,7 @@ window.onAuth=function(u){
   else if(isAdmin()){var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
   else toast("Setup not finished yet – sign in as manager first");
   var first=!ready;ready=true;if(first)setTab("inv");else render();if(!d&&isAdmin())save()}));
+ setTimeout(function(){if(!ready&&me){setSvd("⚠ timeout");toast("⚠ No connection to database")}},8000);
  unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(ready)render()}))}
 
 function render(){
@@ -320,7 +321,7 @@ import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,updatePassw
 import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,onSnapshot,collection,query,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyA_TGEgHZcwZwCvioWapF7dZNtlUxTjh4c",authDomain:"wazzupdog-inventory-items.firebaseapp.com",projectId:"wazzupdog-inventory-items",storageBucket:"wazzupdog-inventory-items.firebasestorage.app",messagingSenderId:"613831855349",appId:"1:613831855349:web:625458043bc5ec8796c9bc"});
 const auth=getAuth(app);
-const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+const db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
 window.FB={
  login:(e,p)=>signInWithEmailAndPassword(auth,e,p),
  logout:()=>signOut(auth),
