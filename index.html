@@ -41,13 +41,13 @@ h2{font-size:16px;margin:0 0 4px}.note{color:var(--mu);font-size:12px;margin:8px
 #dlg{position:fixed;inset:0;background:#0008;display:grid;place-items:center;z-index:20}#dlg[hidden]{display:none}.dbox{background:var(--card);padding:22px;border-radius:14px;min-width:270px;text-align:center}
 #login{max-width:none;margin:0;min-height:calc(100vh - 72px);display:grid;place-items:center;background:linear-gradient(135deg,var(--pr),var(--hd));padding:20px}#login[hidden]{display:none}
 .lc{background:var(--card);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 10px 40px #0004}.lg{font-size:46px}.lc h1{margin:6px 0 0}.lc p{color:var(--mu);margin:2px 0 14px}
-td.n,th:first-child{position:sticky;inset-inline-start:0;z-index:1}td.n{background:var(--card)}th:first-child{background:var(--hd)}#rep td.n,#rep th:first-child{position:static}
+#tbl td.n,#tbl th:first-child{position:sticky;inset-inline-start:0;z-index:1}#tbl td.n{background:var(--card)}#tbl th:first-child{background:var(--hd)}#rep td.n,#rep th:first-child{position:static}
 </style>
 </head>
 <body>
 <header>
  <div id="logo">🌭</div><div><h1 id="siteH">Wazzup Dog</h1><small id="who"></small></div><span style="flex:1"></span>
- <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v5</span><button class="s" id="bOut" onclick="logout()" hidden></button>
+ <button class="s" id="bLang" onclick="togLang()"></button><button class="s" onclick="togDir()">⇄</button><button class="s" onclick="togTheme()">🌓</button><button class="s" id="bSet" onclick="setTab('set')" hidden>⚙</button><span id="svd" style="font-size:12px;opacity:.85">v7</span><button class="s" id="bOut" onclick="logout()" hidden></button>
 </header>
 
 <div id="login"><div class="lc"><div class="lg">🌭</div><h1>Wazzup Dog</h1><p data-i="sub"></p><h2 data-i="login"></h2><input id="pw" type="password" autocomplete="off" data-p="pass" onkeydown="if(event.key==='Enter')doLogin()"><button onclick="doLogin()" data-i="enter" style="width:100%"></button></div></div>
@@ -62,7 +62,7 @@ td.n,th:first-child{position:sticky;inset-inline-start:0;z-index:1}td.n{backgrou
 
 <section id="t-inv" class="card">
  <h2 id="ttl"></h2><p class="rng" id="rng"></p><div class="kpis" id="kpis"></div>
- <input id="q" data-p="search" oninput="render()" style="width:100%;margin-bottom:8px"><div class="sc"><table id="tbl"></table></div>
+ <input id="q" type="search" name="item-search" autocomplete="off" autocapitalize="off" data-p="search" oninput="render()" style="width:100%;margin-bottom:8px"><div class="sc"><table id="tbl"></table></div>
  <div class="bar" style="margin-top:10px"><button id="bRoll" onclick="rollover()" data-i="roll" hidden></button></div>
  <p class="note" data-i="note"></p>
 </section>
@@ -92,10 +92,10 @@ td.n,th:first-child{position:sticky;inset-inline-start:0;z-index:1}td.n{backgrou
  <h3 data-i="log"></h3><div class="sc" style="max-height:260px;overflow:auto"><table id="logt" style="min-width:0"></table></div>
 </section>
 </main>
-<div id="toast"></div><div id="rep"></div>
+<div id="bn" hidden style="position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;background:#c1121f;color:#fff;padding:8px;text-align:center;z-index:30;font-weight:700"></div><div id="toast"></div><div id="rep"></div>
 
 <script>
-var LAST={},unsubs=[],ACC={},selfChg=false,CE=false;
+var LAST={},unsubs=[],ACC={},selfChg=false,CE=false,EDIT=null,PLoaded=false,needSeedP=false;
 var MO=[["يناير","Jan"],["فبراير","Feb"],["مارس","Mar"],["أبريل","Apr"],["مايو","May"],["يونيو","Jun"],["يوليو","Jul"],["أغسطس","Aug"],["سبتمبر","Sep"],["أكتوبر","Oct"],["نوفمبر","Nov"],["ديسمبر","Dec"]];
 var T={ar:{login:"تسجيل الدخول",pass:"كلمة المرور",enter:"دخول",wrong:"كلمة المرور غير صحيحة",out:"خروج",inv:"الجرد",pur:"المشتريات",trf:"التحويلات",items:"الأصناف",settings:"الإعدادات",
  juffair:"الجفير",hamala:"الهملة",total:"الإجمالي (الفرعين)",h1:"1 – 15",h2:"16 – نهاية الشهر",roll:"ترحيل المتبقي الفعلي للفترة التالية",
@@ -128,7 +128,7 @@ try{var u0=JSON.parse(localStorage.getItem("wd-ui"));if(u0){S.ui.lang=u0.lang||"
 function canB(b){return me&&(me.role==="admin"||me.br===b)}
 function metaObj(){return{items:S.items,seq:S.seq,logo:S.logo,color:S.ui.color,lastBy:S.lastBy||"",log:S.log.slice(0,100),siteName:S.siteName,staff:S.staff}}
 function setSvd(t){var e=document.getElementById("svd");if(e)e.textContent=t}
-function cw(c,id,o,lk){FB.set(c,id,o).then(function(){var d=new Date();setSvd("✓ "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"))}).catch(function(){delete LAST[lk];setSvd("⚠ !");toast("⚠ Save failed")})}
+function cw(c,id,o,lk){FB.set(c,id,o).then(function(){$("bn").hidden=true;var d=new Date();setSvd("✓ "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"))}).catch(function(e){delete LAST[lk];setSvd("⚠ !");var b=$("bn");b.textContent="⚠ لم يتم الحفظ / Not saved: "+((e&&e.code)||"");b.hidden=false})}
 function save(){try{localStorage.setItem("wd-ui",JSON.stringify({lang:S.ui.lang,dir:S.ui.dir,theme:S.ui.theme,siteName:S.siteName}))}catch(e){}
  if(!window.FB||!me||!ready||!metaOK)return;
  var m=JSON.stringify(metaObj());if(LAST.meta!==m){LAST.meta=m;cw("meta","main",JSON.parse(m),"meta")}
@@ -139,9 +139,10 @@ function canE(x){return isAdmin()||(me&&me.role==="staff"&&x.ts&&Date.now()-new 
 function IT(){return S.items.filter(function(i){return!i.del})}
 function logA(m){S.log.unshift({t:new Date().toISOString(),u:me?(me.role==="admin"?"admin":"staff-"+me.br):"",m:m});S.log=S.log.slice(0,300)}
 function $(i){return document.getElementById(i)}
+function uid(){return"i"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 function L(k){return T[S.ui.lang][k]}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function num(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function num(v){var x=parseFloat(String(v).replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632}).replace(/[٫,]/g,"."));return isNaN(x)?0:x}
 function r3(x){return Math.round(x*1000)/1000}
 function toast(m){var t=$("toast");t.textContent=m;t.className="on";setTimeout(function(){t.className=""},2200)}
 function isAdmin(){return me&&me.role==="admin"}
@@ -202,19 +203,20 @@ function chRole(r){var p=$("np-"+r).value;if(p.length<6){toast(L("pwShort"));ret
 function logout(){if(window.FB)FB.logout()}
 window.onFBErr=function(e){var m="⚠ "+((e&&e.code)||e);setSvd(m);toast(m);var r=document.getElementById("rng");if(r&&me)r.textContent=m}
 window.onAuth=function(u){if(!u){start(null);return}FB.getAcc().then(function(a){ACC=a;var r=roleOf(u.email);if(!r){FB.logout();toast(L("wrong"));return}start(u,r)}).catch(function(e){window.onFBErr(e)})};
+function seedP(){needSeedP=false;if(!S.br.j["2026-11-1"]){var sp=seed().br.j["2026-11-1"];sp.br="j";sp.key="2026-11-1";S.br.j["2026-11-1"]=sp}}
 function start(u,r){
- unsubs.forEach(function(f){f()});unsubs=[];ready=false;metaOK=false;LAST={};
+ unsubs.forEach(function(f){f()});unsubs=[];ready=false;metaOK=false;LAST={};PLoaded=false;needSeedP=false;
  if(!u){me=null;$("login").hidden=false;$("app").hidden=true;$("bOut").hidden=true;$("who").textContent="";$("bSet").hidden=true;return}
  me={role:r==="a"?"admin":"staff",br:r==="h"?"h":"j"};cur.b=me.br;
- $("login").hidden=true;$("app").hidden=false;$("bOut").hidden=false;S.br={j:{},h:{}};
+ $("login").hidden=true;$("app").hidden=false;$("bOut").hidden=false;S.br={j:{},h:{}};if($("q"))$("q").value="";
  unsubs.push(FB.subMeta(function(d,fc){
   if(d&&d.items&&d.items.length){metaOK=true;S.items=d.items||[];S.seq=d.seq||20;S.logo=d.logo||"";S.ui.color=d.color||S.ui.color;S.lastBy=d.lastBy||"";S.log=d.log||[];S.siteName=d.siteName||"Wazzup Dog";S.staff=d.staff||{j:"",h:""};LAST.meta=JSON.stringify(metaObj())}
   else if(fc){return}
-  else if(isAdmin()){metaOK=true;var sd=seed();S.items=sd.items;S.seq=sd.seq;S.br.j=sd.br.j;Object.keys(S.br.j).forEach(function(k){S.br.j[k].br="j";S.br.j[k].key=k})}
+  else if(isAdmin()){metaOK=true;var sd=seed();S.items=sd.items;S.seq=sd.seq;if(PLoaded)seedP();else needSeedP=true}
   else toast("Setup not finished yet – sign in as manager first");
   var first=!ready;ready=true;if(first)setTab("inv");else render();if(metaOK&&!LAST.meta)save()}));
  setTimeout(function(){if(!ready&&me){setSvd("⚠ timeout");toast("⚠ No connection to database")}},8000);
- unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(ready)render()}));
+ unsubs.push(FB.subPeriods(isAdmin()?null:me.br,function(docs,fc){docs.forEach(function(x){var d=x.data;if(!d.br||!S.br[d.br])return;S.br[d.br][d.key]=d;LAST[x.id]=JSON.stringify(d)});if(!fc){PLoaded=true;if(needSeedP)seedP()}if(ready)render()}));
  unsubs.push(FB.subAcc(function(a){ACC=a;if(!roleOf(u.email)&&!selfChg){FB.logout();toast(L("pwChanged"))}}))}
 
 function render(){
@@ -232,13 +234,13 @@ function render(){
  $("tbl").innerHTML=h;$("bRoll").hidden=!(ad&&!ro);
  var opts=IT().map(function(i){return'<option value="'+i.id+'">'+esc(nm(i))+'</option>'}).join("");
  ["p-i","r-i"].forEach(function(i){var v=$(i).value;$(i).innerHTML=opts;if(v)$(i).value=v});
- var bb=ro?"j":cur.b,p=P(bb,key(cur))||{pur:[],trf:[]},tt=0;
+ var p=pData(),tt=0;
  $("pForm").hidden=$("rForm").hidden=ro;
  var pc=L("pcols"),ph='<tr>'+pc.map(function(x){return'<th>'+x+'</th>'}).join("")+'<th></th></tr>';
- (p.pur||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);var t=num(x.q)*num(x.p);tt+=t;ph+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("pur",i,"d",x.d,"date",130)+'</td><td>'+ec("pur",i,"n",x.n)+'</td><td>'+ec("pur",i,"s",x.s)+'</td><td>'+ec("pur",i,"q",x.q,"number",70)+'</td><td>'+ec("pur",i,"p",x.p,"number",80)+'</td><td>'+t.toFixed(3)+'</td><td>'+ec("pur",i,"t",x.t)+'</td><td>'+fdt(x.ts)+'</td><td>'+esc(x.by)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'pur\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
+ (p.pur||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);var t=num(x.q)*num(x.p);tt+=t;ph+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("pur",i,"d",x.d,"date",130)+'</td><td>'+ec("pur",i,"n",x.n)+'</td><td>'+ec("pur",i,"s",x.s)+'</td><td>'+ec("pur",i,"q",x.q,"number",70)+'</td><td>'+ec("pur",i,"p",x.p,"number",80)+'</td><td>'+t.toFixed(3)+'</td><td>'+ec("pur",i,"t",x.t)+'</td><td>'+fdt(x.ts)+'</td><td>'+esc(x.by)+'</td><td>'+eb("pur",i)+(ad&&!ro?'<button class="g" onclick="del(\'pur\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
  $("p-tbl").innerHTML=ph;$("p-tot").textContent=L("totPur")+": "+tt.toFixed(3)+" BHD  ("+rangeTxt(cur)+")";
  var tc=L("tcols"),rh='<tr>'+tc.map(function(x){return'<th>'+x+'</th>'}).join("")+'<th></th></tr>';
- (p.trf||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);rh+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("trf",i,"d",x.d,"date",130)+'</td><td>'+ec("trf",i,"n",x.n)+'</td><td>'+(x.r==="in"?L("inn"):L("out2"))+'</td><td>'+ec("trf",i,"q",x.q,"number",70)+'</td><td>'+ec("trf",i,"t",x.t)+'</td><td>'+(ad&&!ro?'<button class="g" onclick="del(\'trf\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
+ (p.trf||[]).forEach(function(x,i){if(x.del)return;CE=canE(x);rh+='<tr><td class="n">'+esc(itName(x.i))+'</td><td>'+ec("trf",i,"d",x.d,"date",130)+'</td><td>'+ec("trf",i,"n",x.n)+'</td><td>'+(x.r==="in"?L("inn"):L("out2"))+'</td><td>'+ec("trf",i,"q",x.q,"number",70)+'</td><td>'+ec("trf",i,"t",x.t)+'</td><td>'+eb("trf",i)+(ad&&!ro?'<button class="g" onclick="del(\'trf\','+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
  $("r-tbl").innerHTML=rh;
  var ih='<tr><th>'+L("nameAr")+'</th><th>'+L("nameEn")+'</th><th>'+L("unit")+'</th><th>'+L("price")+'</th><th>'+L("minQ")+'</th><th></th></tr>';
  S.items.forEach(function(it,i){if(it.del)return;ih+='<tr><td><input class="t" value="'+esc(it.ar)+'" onchange="editItem('+i+',\'ar\',this.value)"></td><td><input class="t" value="'+esc(it.en)+'" onchange="editItem('+i+',\'en\',this.value)"></td><td><input class="t" value="'+esc(it.u)+'" onchange="editItem('+i+',\'u\',this.value)"></td><td><input class="y" type="number" step="any" value="'+it.pr+'" '+(ad?"":"disabled")+' onchange="editItem('+i+',\'pr\',this.value)"></td><td><input class="y" type="number" step="any" value="'+(it.mn||"")+'" onchange="editItem('+i+',\'mn\',this.value)"></td><td>'+(ad?'<button class="g" onclick="delItem('+i+')">'+L("del")+'</button>':'')+'</td></tr>'});
@@ -247,7 +249,7 @@ function render(){
  var pt=0;(ro?["j","h"]:[cur.b]).forEach(function(b){var q=P(b,key(cur));q&&(q.pur||[]).forEach(function(x){if(!x.del)pt+=num(x.q)*num(x.p)})});
  $("kpis").innerHTML=kp(L("kStock"),r3(tva).toFixed(3)+" BHD")+kp(L("kItems"),IT().length)+kp(L("kLow"),low)+kp(L("kPur"),pt.toFixed(3)+" BHD");
  var sp={};["j","h"].forEach(function(b){Object.keys(S.br[b]).forEach(function(k){(S.br[b][k].pur||[]).forEach(function(x){if(x.s)sp[x.s]=1})})});$("sups").innerHTML=Object.keys(sp).map(function(s){return'<option value="'+esc(s)+'">'}).join("");
- if(!$("p-by").value)$("p-by").value=(me.role==="staff"&&S.staff&&S.staff[me.br])||S.lastBy||"";if(!$("p-d").value)$("p-d").value=new Date().toISOString().slice(0,10);
+ if(!$("p-by").value)$("p-by").value=(me.role==="staff"&&S.staff&&S.staff[me.br])||S.lastBy||"";if(!$("p-d").value)$("p-d").value=new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Bahrain"});
 }
 function inp(k,id,v,dis){return'<input class="y" type="number" step="any" value="'+(v===undefined?"":v)+'"'+(dis||"")+' onchange="setF(\''+k+'\',\''+id+'\',this.value)">'}
 function setF(k,id,v,txt){if(cur.b==="t")return;var p=P(cur.b,key(cur),1);p[k][id]=txt?v:(v===""?"":num(v));if(k==="actual"&&v!==""&&!isAdmin())p.lock[id]=true;logA(k+": "+itName(id)+" = "+v+" ("+key(cur)+")");render()}
@@ -255,7 +257,9 @@ function unlock(id){P(cur.b,key(cur),1).lock[id]=false;render()}
 function rollover(){ask(L("rollQ"),doRoll)}
 function ask(m,cb){$("dm").textContent=m;$("dlg").hidden=false;$("dy").onclick=function(){$("dlg").hidden=true;cb()};$("dn").onclick=function(){$("dlg").hidden=true}}
 function kp(a,b){return'<div class="kp"><small>'+a+'</small><b>'+b+'</b></div>'}
-function ec(l,i,k,v,ty,w){if(!(CE&&cur.b!=="t"))return ty==="date"?fd(v):esc(v);return'<input class="y" style="width:'+(w||90)+'px" type="'+(ty||"text")+'" value="'+esc(v)+'" onchange="editRow(\''+l+'\','+i+',\''+k+'\',this.value)">'}
+function togEdit(l,i){EDIT=(EDIT&&EDIT.l===l&&EDIT.i===i)?null:{l:l,i:i};render()}
+function eb(l,i){return(CE&&cur.b!=="t")?'<button class="g" style="color:var(--tx);font-size:16px" onclick="togEdit(\''+l+'\','+i+')">'+((EDIT&&EDIT.l===l&&EDIT.i===i)?"✔":"✏️")+'</button> ':""}
+function ec(l,i,k,v,ty,w){if(!(CE&&cur.b!=="t"&&EDIT&&EDIT.l===l&&EDIT.i===i))return ty==="date"?fd(v):esc(v);return'<input class="y" style="width:'+(w||90)+'px" type="'+(ty||"text")+'" value="'+esc(v)+'" onchange="editRow(\''+l+'\','+i+',\''+k+'\',this.value)">'}
 function editRow(l,i,k,v){if(cur.b==="t")return;var x=P(cur.b,key(cur),1)[l][i];if(!canE(x))return;x[k]=(k==="q"||k==="p")?num(v):v;logA("edit "+l+" "+k);render()}
 function fillLast(){var id=$("p-i").value,best=null;["j","h"].forEach(function(b){Object.keys(S.br[b]).forEach(function(k){(S.br[b][k].pur||[]).forEach(function(x){if(x.i===id&&!x.del&&(!best||(x.ts||x.d||"")>(best.ts||best.d||"")))best=x})})});if(best){$("p-p").value=best.p;$("p-s").value=best.s||""}}
 function doRoll(){var n=nextOf(cur),d=P(cur.b,key(n),1);
@@ -263,14 +267,14 @@ function doRoll(){var n=nextOf(cur),d=P(cur.b,key(n),1);
 function addPur(){var q=$("p-q").value,by=$("p-by").value.trim();
  if(cur.b==="t")return;if(!by){toast(L("needBy"));$("p-by").focus();return}if(!q){toast(L("needQty"));return}
  var id=$("p-i").value,nw=$("p-new").value.trim();
- if(nw){S.seq=(S.seq||20)+1;id="i"+S.seq;S.items.push({id:id,ar:nw,en:nw,u:"",pr:0});$("p-new").value=""}
+ if(nw){id=uid();S.items.push({id:id,ar:nw,en:nw,u:"",pr:0});$("p-new").value=""}
  S.lastBy=by;var p=P(cur.b,key(cur),1);logA("+purchase");
  p.pur.push({ts:new Date().toISOString(),by:by,i:id,d:$("p-d").value,n:$("p-n").value,s:$("p-s").value.trim(),q:num(q),p:num($("p-p").value),t:$("p-t").value});
  ["p-q","p-p","p-n","p-s","p-t"].forEach(function(i){$(i).value=""});render();$("p-i").value=id;toast(L("added"))}function addTrf(){var q=$("r-q").value;if(!q){toast(L("needQty"));return}var p=P(cur.b,key(cur),1);
  logA("+transfer");p.trf.push({ts:new Date().toISOString(),i:$("r-i").value,d:$("r-d").value,n:$("r-n").value,r:$("r-r").value,q:num(q),t:$("r-t").value});["r-q","r-n","r-t"].forEach(function(i){$(i).value=""});render();toast(L("added"))}
 function del(k,i){if(!isAdmin()||cur.b==="t")return;ask(L("sure"),function(){P(cur.b,key(cur),1)[k][i].del=new Date().toISOString();logA("delete "+k);render()})}
-function addItem(){var a=$("i-a").value.trim(),e=$("i-e").value.trim();if(!a&&!e)return;S.seq=(S.seq||20)+1;
- S.items.push({id:"i"+S.seq,ar:a,en:e,u:$("i-u").value.trim(),pr:isAdmin()?num($("i-pr").value):0});["i-a","i-e","i-u","i-pr"].forEach(function(i){$(i).value=""});render();toast(L("added"))}
+function addItem(){var a=$("i-a").value.trim(),e=$("i-e").value.trim();if(!a&&!e)return;
+ S.items.push({id:uid(),ar:a,en:e,u:$("i-u").value.trim(),pr:isAdmin()?num($("i-pr").value):0});["i-a","i-e","i-u","i-pr"].forEach(function(i){$(i).value=""});render();toast(L("added"))}
 function editItem(i,k,v){S.items[i][k]=(k==="pr"||k==="mn")?num(v):v;logA("item "+k);render()}
 function delItem(i){if(!isAdmin())return;ask(L("sure"),function(){S.items[i].del=new Date().toISOString();logA("delete item");render()})}
 function restoreItem(i){delete S.items[i].del;logA("restore item");render()}
@@ -290,7 +294,7 @@ function renderSet(){
  $("trash").innerHTML=h||'<tr><td>—</td></tr>';
  $("logt").innerHTML=S.log.slice(0,60).map(function(e){return'<tr><td>'+fdt(e.t)+'</td><td>'+esc(e.u)+'</td><td>'+esc(e.m)+'</td></tr>'}).join("");
 }
-function upLogo(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){S.logo=r.result;save();applyUI()};r.readAsDataURL(f)}
+function upLogo(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,160/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);S.logo=c.toDataURL("image/jpeg",0.8);save();applyUI()};im.src=r.result};r.readAsDataURL(f)}
 
 async function saveFile(name,data,mime){
  try{if(typeof claude!=="undefined"){var d=await claude.use("downloads");if(d){await d.save({filename:name,data:data});return}}}catch(e){if(e&&e.code==="declined")return}
@@ -302,7 +306,7 @@ function rowsAoa(){var a=[L("cols")],tv=0;
  var f=new Array(16).fill("");f[0]=L("totRow");f[14]=r3(tv);a.push(f);return a}
 function iso(x){return"\u2068"+x+"\u2069"}
 function ttlTxt(){return iso(S.siteName)+" – "+iso(L(cur.b==="j"?"juffair":cur.b==="h"?"hamala":"total"))+" | "+iso(MO[cur.m][S.ui.lang==="ar"?0:1]+" "+cur.y)+" | "+rangeTxt(cur)}
-function pData(){var p=P(cur.b==="t"?"j":cur.b,key(cur))||{pur:[],trf:[]};return p}
+function pData(){if(cur.b==="t"){var a=P("j",key(cur))||{},b=P("h",key(cur))||{};return{pur:(a.pur||[]).concat(b.pur||[]),trf:(a.trf||[]).concat(b.trf||[])}}return P(cur.b,key(cur))||{pur:[],trf:[]}}
 async function expXlsx(){
  if(typeof XLSX==="undefined"){toast("...");return}
  var p=pData(),wb=XLSX.utils.book_new(),a=rowsAoa();a.unshift([ttlTxt()]);
@@ -329,7 +333,7 @@ async function expPdf(){
  $("rep").innerHTML="";
 }
 function expJson(){saveFile("Wazzup_Inventory_Backup.json",JSON.stringify(S),"application/json")}
-function impJson(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d.items||!d.br)throw 0;S.items=d.items;S.br=d.br;S.seq=d.seq||S.seq;LAST={};save();applyUI()}catch(e){toast("Invalid file")}};r.readAsText(f)}
+function impJson(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d.items||!d.br)throw 0;S.items=d.items;S.br=d.br;S.seq=d.seq||S.seq;["j","h"].forEach(function(b){S.br[b]=S.br[b]||{};Object.keys(S.br[b]).forEach(function(k){var o=S.br[b][k];o.br=b;o.key=k;["open","sales","waste","other","actual","notes","lock"].forEach(function(f){o[f]=o[f]||{}});o.pur=o.pur||[];o.trf=o.trf||[]})});LAST={};save();applyUI()}catch(e){toast("Invalid file")}};r.readAsText(f)}
 init();
 </script>
 <script type="module">
@@ -345,7 +349,7 @@ window.FB={
  logout:()=>signOut(auth),
  set:(c,i,d)=>setDoc(doc(db,c,i),d),
  subMeta:cb=>onSnapshot(doc(db,"meta","main"),s=>cb(s.exists()?s.data():null,s.metadata.fromCache),e=>window.onFBErr&&window.onFBErr(e)),
- subPeriods:(b,cb)=>onSnapshot(b?query(collection(db,"periods"),where("br","==",b)):collection(db,"periods"),s=>cb(s.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>({id:d.id,data:d.data()}))),e=>window.onFBErr&&window.onFBErr(e)),
+ subPeriods:(b,cb)=>onSnapshot(b?query(collection(db,"periods"),where("br","==",b)):collection(db,"periods"),s=>cb(s.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>({id:d.id,data:d.data()})),s.metadata.fromCache),e=>window.onFBErr&&window.onFBErr(e)),
  getAcc:()=>getDoc(doc(db,"meta","access")).then(s=>s.exists()?s.data():{}),
  subAcc:cb=>onSnapshot(doc(db,"meta","access"),s=>cb(s.exists()?s.data():{})),
  setAcc:o=>setDoc(doc(db,"meta","access"),o),
